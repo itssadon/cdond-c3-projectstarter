@@ -89,6 +89,7 @@ jobs:
           command: |
             cd backend
             npm install
+            exit 1
             npm audit fix --audit-level=critical --force
 
 workflows:
