@@ -22,7 +22,7 @@ commands:
           environment:
             TERM: xterm-256color
           when: on_fail
-  
+
   revert_migrations:
     description: Revert the last migration if successfully run in the current workflow.
     parameters:
@@ -219,7 +219,7 @@ jobs:
                 curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
             fi
       - destroy_environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}     
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   deploy-frontend:
     docker:
@@ -256,6 +256,23 @@ jobs:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
+  deploy-backend:
+    docker:
+      # Docker image here that supports Ansible
+    steps:
+      # Checkout code from git
+      # Add ssh keys with fingerprint
+      # attach workspace
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+      - run:
+          name: Deploy backend
+          command: |
+            # your code here
+      # Here's where you will add some code to rollback on failure
 
 workflows:
   default:
