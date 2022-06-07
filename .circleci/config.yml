@@ -209,6 +209,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install AWS CLI dependencies
+          command: |
+            yum install -y awscli
+      - run:
           name: Run migrations
           working_directory: ./backend
           command: |
