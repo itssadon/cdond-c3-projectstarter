@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs: 
+  aws-cli: circleci/aws-cli@3.1.1
+
 commands:
   destroy_environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -182,10 +185,8 @@ jobs:
             - "5c:b0:d2:b6:07:d4:0a:9a:d0:d9:4e:9d:e0:7b:3f:82"
       - attach_workspace:
           at: .
-      - run:
-          name: Install awscli
-          command: |
-            pip3 install --no-cache-dir awscli
+      - aws-cli/setup:
+          profile-name: default
       - run:
           name: Install ansible
           working_directory: ./.circleci/ansible
@@ -208,10 +209,8 @@ jobs:
       - image: cimg/node:13.8.0
     steps:
       - checkout
-      - run:
-          name: Install AWS CLI dependencies
-          command: |
-            apt install -y awscli
+      - aws-cli/setup:
+          profile-name: default
       - run:
           name: Run migrations
           working_directory: ./backend
@@ -278,10 +277,8 @@ jobs:
           name: Install tar and gzip
           command: |
             apk add tar gzip
-      - run:
-          name: Install awscli
-          command: |
-            pip3 install --no-cache-dir awscli
+      - aws-cli/setup:
+          profile-name: default
       - run:
           name: Install ansible
           working_directory: ./.circleci/ansible
