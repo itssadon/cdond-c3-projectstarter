@@ -1,8 +1,8 @@
 version: 2.1
 
-orbs: 
+orbs:
   aws-cli: circleci/aws-cli@3.1.1
-  node: circleci/node@5.0.2
+  node: circleci/node@13.8.0
 
 commands:
   destroy_environment:
@@ -231,17 +231,15 @@ jobs:
 
   deploy-frontend:
     docker:
-      - image: amazon/awscli
+      - image: amazon/aws-cli
     steps:
       - checkout
       - run:
           name: Install tar and gzip
           command: |
             yum install -y tar gzip
-      - run:
-          name: Install node and npm
-          command: |
-            yum install -y node npm
+      - node/install:
+          install-yarn: true
       - run:
           name: Get backend url
           working_directory: ./frontend
@@ -288,7 +286,7 @@ jobs:
             ansible --version
       - node/install:
           install-yarn: true
-          node-version: '13.8.0'
+          node-version: "13.8.0"
       - node/install-packages:
           app-dir: ./backend
           cache-path: ~/project/node_modules
