@@ -17,11 +17,30 @@ commands:
       - run:
           name: Destroy frontend stack
           command: |
-            # aws s3 rm s3://udapeople-<< parameters.id >> --recursive
+            aws s3 rm s3://udapeople-802961353145-<< parameters.workflow_id >> --recursive
             aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.id >>
           environment:
             TERM: xterm-256color
           when: on_fail
+  
+  revert_migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    parameters:
+      workflow_id:
+        type: string
+    steps:
+      - run:
+          name: Revert migrations
+          working_directory: ./backend
+          command: |
+            SUCCESS=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/migration_<< parameters.workflow_id >>)
+            echo $SUCCESS
+            if [[ "$SUCCESS" == "success" ]]
+            then
+              pwd
+              ls -la
+              npm run migrations:revert
+            fi
 
 jobs:
   build-frontend:
@@ -33,8 +52,8 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Build front-end
+          working_directory: ./frontend
           command: |
-            cd frontend
             npm install
             npm run build
       - save_cache:
@@ -49,9 +68,9 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       - run:
-          name: Back-end build
+          name: Build back-end
+          working_directory: ./backend
           command: |
-            cd backend
             npm install
             npm run build
       - save_cache:
@@ -67,8 +86,8 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Run frontend test
+          working_directory: ./frontend
           command: |
-            cd frontend
             npm install
             npm run test
 
@@ -81,8 +100,8 @@ jobs:
           keys: [backend-build]
       - run:
           name: Run backend test
+          working_directory: ./backend
           command: |
-            cd backend
             npm install
             npm run test
 
@@ -95,8 +114,8 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Run frontend analysis
+          working_directory: ./frontend
           command: |
-            cd frontend
             npm install
             npm audit fix --audit-level=critical
 
@@ -109,8 +128,8 @@ jobs:
           keys: [backend-build]
       - run:
           name: Run backend analysis
+          working_directory: ./backend
           command: |
-            cd backend
             npm install
             npm audit fix --audit-level=critical --force
 
@@ -187,20 +206,55 @@ jobs:
       - checkout
       - run:
           name: Run migrations
-          working_directory: backend
+          working_directory: ./backend
           command: |
             npm install
             # Run and save the migration output
             npm run migrations > migrations_dump.txt
       - run:
-          name: Send migration results to memstash
+          name: Send migration results to kvdb.io
           command: |
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-                # If you are using kvdb.io, generate the bucket ID "9GE4jRtKznmVKRfvdBABBe" in your local terminal first
-                curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+                curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
             fi
       - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}     
+
+  deploy-frontend:
+    docker:
+      - image: amazon/awscli
+    steps:
+      - checkout
+      - run:
+          name: Install tar and gzip
+          command: |
+            yum install -y tar gzip
+      - run:
+          name: Install node and npm
+          command: |
+            yum install -y node npm
+      - run:
+          name: Get backend url
+          working_directory: ./frontend
+          command: |
+            # your code here
+            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}")
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> .env
+            cat .env
+      - run:
+          name: Deploy frontend objects
+          working_directory: ./frontend
+          command: |
+            npm install
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-802961353145-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert_migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
 workflows:
