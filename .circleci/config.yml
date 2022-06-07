@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   aws-cli: circleci/aws-cli@3.1.1
-  node: circleci/node@13.8.0
+  node: circleci/node@5.0.2
 
 commands:
   destroy_environment:
@@ -240,6 +240,7 @@ jobs:
             yum install -y tar gzip
       - node/install:
           install-yarn: true
+          node-version: '13.8.0'
       - run:
           name: Get backend url
           working_directory: ./frontend
