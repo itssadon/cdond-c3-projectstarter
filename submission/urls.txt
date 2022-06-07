@@ -1,16 +1,8 @@
 - Public Url to GitHub repository (not private) [URL01](https://github.com/itssadon/cdond-c3-projectstarter)
-- Public URL for your S3 Bucket (aka, your green candidate front-end) [URL02]
+- Public URL for your S3 Bucket (aka, your green candidate front-end) [URL02]()
 - Public URL for your CloudFront distribution (aka, your blue production front-end) [URL03]
 - Public URLs to deployed application back-end in EC2 [URL04]
 - Public URL to your Prometheus Server [URL05]
-
-db master
-username: postgres
-password: mypostgrespassword
-
-udapeople-802961353145
-
-5c:b0:d2:b6:07:d4:0a:9a:d0:d9:4e:9d:e0:7b:3f:82
 
 aws cloudformation deploy \
          --template-file cloudfront.yml \

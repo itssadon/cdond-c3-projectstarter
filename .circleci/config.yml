@@ -296,7 +296,6 @@ jobs:
           cache-path: ~/project/node_modules
           override-ci-command: npm install
       - node/run:
-          name: "Build backend"
           app-dir: ./backend
           npm-run: build
       - run:
