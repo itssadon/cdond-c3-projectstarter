@@ -239,6 +239,7 @@ jobs:
           command: |
             yum install -y tar gzip
       - node/install:
+          install-yarn: false
           node-version: "13.8.0"
       - run:
           name: Get backend url
@@ -285,6 +286,7 @@ jobs:
             apk add --update ansible
             ansible --version
       - node/install:
+          install-yarn: false
           node-version: "13.8.0"
       - node/install-packages:
           app-dir: ./backend
