@@ -240,7 +240,7 @@ jobs:
             yum install -y tar gzip
       - node/install:
           install-yarn: true
-          node-version: '13.8.0'
+          node-version: "13.8.0"
       - run:
           name: Get backend url
           working_directory: ./frontend
@@ -274,9 +274,9 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Install tar and gzip
+          name: Install tar, gzip and bash
           command: |
-            apk add tar gzip
+            apk add tar gzip bash
       - aws-cli/setup:
           profile-name: default
       - run:
