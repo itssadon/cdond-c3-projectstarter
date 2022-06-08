@@ -14,7 +14,6 @@ executors:
 orbs:
   aws-cli: circleci/aws-cli@3.1.1
   node: circleci/node@5.0.2
-  python: circleci/python@2.0.3
 
 commands:
   destroy_environment:
@@ -179,7 +178,7 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
-            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7} -d '$BACKEND_IP'
+            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7} -d '${BACKEND_IP}'
       - run:
           name: Add back-end ip to ansible inventory
           command: |
@@ -234,8 +233,8 @@ jobs:
     executor: node
     steps:
       - checkout
-      - attach_workspace:
-          at: .
+      - restore_cache:
+          keys: ["backend-build"]
       - aws-cli/setup:
           profile-name: default
       - run:
@@ -256,15 +255,14 @@ jobs:
     executor: node
     steps:
       - checkout
+      - restore_cache:
+          keys: ["backend-build"]
       - aws-cli/setup:
           profile-name: default
       - run:
           name: Install tar and gzip
           command: |
             yum install -y tar gzip
-      - node/install:
-          install-yarn: false
-          node-version: "13.8.0"
       - run:
           name: Get backend url
           working_directory: ./frontend
