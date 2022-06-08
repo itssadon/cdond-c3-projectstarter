@@ -332,11 +332,11 @@ jobs:
     executor: python
     steps:
       - checkout
+      - aws-cli/setup:
+          profile-name: default
       - run:
           name: Install dependencies
           command: apk add --update curl nodejs npm
-      - aws-cli/setup:
-          profile-name: default
       - run:
           name: Get backend IP
           command: |
