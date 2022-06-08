@@ -334,9 +334,7 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: |
-            apk add --update curl nodejs npm
-            ansible --version
+          command: apk add --update curl nodejs npm
       - aws-cli/setup:
           profile-name: default
       - run:
