@@ -277,16 +277,11 @@ jobs:
       - run:
           name: Install tar, gzip and bash
           command: |
-            sudo apt-get update && sudo apt-get install -y
+            sudo apt-get update && sudo apt-get install -y python
       - aws-cli/setup:
           profile-name: default
-      - python/dist
-      - run:
-          name: Install ansible
-          working_directory: ./.circleci/ansible
-          command: |
-            apk add --update ansible
-            ansible --version
+      - python/install-packages:
+          pkg-manager: pip
       - node/install:
           node-version: "13.8.0"
       - node/install-packages:
@@ -305,6 +300,12 @@ jobs:
             pwd &&
             ls -la
             tar -C backend -czvf artifact.tar.gz .
+      - run:
+          name: Install ansible
+          working_directory: ./.circleci/ansible
+          command: |
+            apk add --update ansible
+            ansible --version
       - run:
           name: Deploy backend
           working_directory: ./.circleci/ansible
