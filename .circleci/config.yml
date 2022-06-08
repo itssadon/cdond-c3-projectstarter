@@ -251,7 +251,7 @@ jobs:
             echo API_URL="http://${BACKEND_IP}:3030" >> .env
             cat .env
       - run:
-          name: Deploy frontend objects
+          name: Build and deploy frontend objects
           working_directory: ./frontend
           command: |
             npm install
@@ -288,14 +288,11 @@ jobs:
       - node/install:
           install-yarn: false
           node-version: "13.8.0"
-      - node/install-packages:
-          app-dir: ./backend
-          cache-path: ~/project/node_modules
-          override-ci-command: npm install
       - run:
           name: Build backend
           working_directory: ./backend
           command: |
+            npm install
             npm run build
       - run:
           name: Zip the backend directory
