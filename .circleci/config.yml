@@ -46,6 +46,7 @@ commands:
     steps:
       - run:
           name: Revert migrations
+          when: on_fail
           working_directory: ./backend
           command: |
             SUCCESS=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/migration_<< parameters.workflow_id >>)
@@ -54,6 +55,7 @@ commands:
             then
               pwd
               ls -la
+              npm install
               npm run migrations:revert
             fi
 
@@ -268,7 +270,7 @@ jobs:
           working_directory: ./frontend
           command: |
             BACKEND_IP=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7})
-            echo 'export BACKEND_URL="http://${BACKEND_IP}:3030"' >> $BASH_ENV
+            export BACKEND_URL="http://${BACKEND_IP}:3030"
             echo "API_URL=${BACKEND_URL}"
             echo API_URL="${BACKEND_URL}" >> .env
             cat .env
@@ -331,16 +333,11 @@ jobs:
           name: Install dependencies
           command: apk add --update curl nodejs npm
       - run:
-          name: Get backend IP
+          name: Get backend IP and run backend smoke test
           command: |
             BACKEND_IP=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7})
-            echo 'export BACKEND_IP="${BACKEND_IP}"' >> $BASH_ENV
-            echo ${BACKEND_IP}
-      - run:
-          name: Backend smoke test.
-          command: |
-            echo 'export API_URL="http://${BACKEND_IP}:3030"'
-            echo ${API_URL}
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL=${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
               return 0
