@@ -293,6 +293,8 @@ jobs:
       - checkout
       - restore_cache:
           keys: ["backend-build"]
+      # - attach_workspace:
+      #     at: .
       - add_ssh_keys:
           fingerprints:
             - "5c:b0:d2:b6:07:d4:0a:9a:d0:d9:4e:9d:e0:7b:3f:82"
@@ -300,22 +302,15 @@ jobs:
           name: Install dependencies
           working_directory: /tmp
           command: |
-            apk add --update tar gzip curl rsync openssh ansible bash
+            apk add --update tar gzip curl ansible bash nodejs npm
             ansible --version
       - aws-cli/setup:
           profile-name: default
-      - node/install:
-          node-version: "13.8.0"
-      - node/install-packages:
-          app-dir: ./backend
-          cache-path: ./backend/node_modules
-          override-ci-command: npm install
-      - run: sudo npm install -g npm@latest
-      - run:
-          name: Build backend
-          working_directory: ./backend
-          command: |
-            npm run build
+      # - run:
+      #     name: Build backend
+      #     working_directory: ./backend
+      #     command: |
+      #       npm run build
       - run:
           name: Zip the backend directory
           command: |
