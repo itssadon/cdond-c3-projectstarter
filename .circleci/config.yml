@@ -32,7 +32,7 @@ commands:
       - run:
           name: Destroy frontend stack
           command: |
-            aws s3 rm s3://udapeople-802961353145 --recursive
+            aws s3 rm s3://udapeople-<< parameters.workflow_id >> --recursive
             aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.workflow_id >>
           environment:
             TERM: xterm-256color
@@ -281,7 +281,7 @@ jobs:
           working_directory: ./frontend
           command: |
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp ./dist s3://udapeople-802961353145 --recursive
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy_environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
@@ -293,8 +293,6 @@ jobs:
       - checkout
       - restore_cache:
           keys: ["backend-build"]
-      # - attach_workspace:
-      #     at: .
       - add_ssh_keys:
           fingerprints:
             - "5c:b0:d2:b6:07:d4:0a:9a:d0:d9:4e:9d:e0:7b:3f:82"
@@ -306,11 +304,6 @@ jobs:
             ansible --version
       - aws-cli/setup:
           profile-name: default
-      # - run:
-      #     name: Build backend
-      #     working_directory: ./backend
-      #     command: |
-      #       npm run build
       - run:
           name: Zip the backend directory
           command: |
