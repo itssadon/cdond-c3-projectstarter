@@ -14,6 +14,20 @@
     tar -xzvf artifact.tar.gz
     ls -la
 
+- name: "copy backend binaries"
+  become: true
+  synchronize:
+    src: ../../backend/dist
+    dest: /home/ubuntu/uda_app
+    recursive: true
+
+- name: "copy node_modules"
+  become: true
+  synchronize:
+    src: ../../backend/node_modules
+    dest: /home/ubuntu/uda_app
+    recursive: true
+
 - name: "delete anything that might already be running"
   become: true
   ignore_errors: true
@@ -21,6 +35,9 @@
 
 - name: "start server"
   become: true
+  # args:
+  #   chdir: /home/ubuntu/backend
   args:
-    chdir: /home/ubuntu/backend
-  command: pm2 start npm -- start
+    chdir: /home/ubuntu/uda_app/dist
+  # command: pm2 start npm -- start
+  command: pm2 start -f ./main.js
