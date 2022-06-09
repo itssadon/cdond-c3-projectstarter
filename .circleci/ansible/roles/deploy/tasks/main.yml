@@ -11,22 +11,8 @@
     chdir: /home/ubuntu
   shell: |
     pwd
-    tar -xzvf artifact.tar.gz
+    tar -xzvf artifact.tar.gz --directory backend_app
     ls -la
-
-- name: "copy backend binaries"
-  become: true
-  synchronize:
-    src: ../../backend/dist
-    dest: /home/ubuntu/uda_app
-    recursive: true
-
-- name: "copy node_modules"
-  become: true
-  synchronize:
-    src: ../../backend/node_modules
-    dest: /home/ubuntu/uda_app
-    recursive: true
 
 - name: "delete anything that might already be running"
   become: true
@@ -35,9 +21,6 @@
 
 - name: "start server"
   become: true
-  # args:
-  #   chdir: /home/ubuntu/backend
   args:
-    chdir: /home/ubuntu/uda_app/dist
-  # command: pm2 start npm -- start
-  command: pm2 start -f ./main.js
+    chdir: /home/ubuntu/backend_app
+  command: pm2 start npm -- start
