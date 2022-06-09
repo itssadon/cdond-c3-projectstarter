@@ -11,7 +11,7 @@
     chdir: /home/ubuntu
   shell: |
     pwd
-    tar -xzvf artifact.tar.gz --directory backend_app
+    tar xzvf artifact.tar.gz --directory ./backend_app
     ls -la
 
 - name: "delete anything that might already be running"
