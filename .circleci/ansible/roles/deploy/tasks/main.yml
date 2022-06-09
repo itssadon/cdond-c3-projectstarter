@@ -9,7 +9,7 @@
 - name: Extract the zipped artifact
   args:
     chdir: /home/ubuntu
-  command: |
+  shell: |
     pwd
     tar -xzvf artifact.tar.gz
     ls -la
@@ -23,7 +23,4 @@
   become: true
   args:
     chdir: /home/ubuntu/backend
-  command: |
-    pwd
-    ls -la
-    pm2 start npm -- start
+  command: pm2 start npm -- start
