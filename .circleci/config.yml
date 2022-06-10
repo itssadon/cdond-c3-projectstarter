@@ -387,7 +387,9 @@ jobs:
             - frontend-build
       - run:
           name: Install dependencies
-          command: dnf module install nodejs:13
+          command: |
+            curl -sL https://rpm.nodesource.com/setup_13.x | sudo bash -
+            yum install -y nodejs npm
       - run:
           name: Update cloudfront distribution
           command: |
@@ -408,7 +410,9 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: yum install -y nodejs npm
+          command: |
+            curl -sL https://rpm.nodesource.com/setup_13.x | sudo bash -
+            yum install -y nodejs npm
       - run:
           name: Get old stack workflow id
           command: |
