@@ -51,10 +51,8 @@ commands:
           command: |
             SUCCESS=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/migration_<< parameters.workflow_id >>)
             echo $SUCCESS
-            if [[ "$SUCCESS" == "success" ]]
+            if (( $SUCCESS == 1 ));
             then
-              pwd
-              ls -la
               npm install
               npm run migrations:revert
             fi
@@ -89,7 +87,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys:
+            - frontend-build
       - run:
           name: Build front-end
           working_directory: ./frontend
@@ -100,7 +99,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys:
+            - backend-build
       - run:
           name: Build back-end
           working_directory: ./backend
@@ -115,7 +115,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys:
+            - frontend-build
       - run:
           name: Run frontend test
           working_directory: ./frontend
@@ -126,7 +127,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys:
+            - backend-build
       - run:
           name: Run backend test
           working_directory: ./backend
@@ -137,7 +139,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys:
+            - frontend-build
       - run:
           name: Check Frontend against security vulnerabilities
           working_directory: ./frontend
@@ -150,7 +153,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys:
+            - backend-build
       - run:
           name: Check Backend against security vulnerabilities
           working_directory: ./backend
@@ -236,7 +240,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: ["backend-build"]
+          keys:
+            - backend-build
       - aws-cli/setup:
           profile-name: default
       - run:
@@ -264,7 +269,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: ["frontend-build"]
+          keys:
+            - frontend-build
       - aws-cli/setup:
           profile-name: default
       - run:
@@ -296,7 +302,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: ["backend-build"]
+          keys: 
+            - backend-build
       - add_ssh_keys:
           fingerprints:
             - "5c:b0:d2:b6:07:d4:0a:9a:d0:d9:4e:9d:e0:7b:3f:82"
@@ -337,17 +344,6 @@ jobs:
           name: Install dependencies
           command: apk add --update curl nodejs npm
       - run:
-          name: Frontend smoke test.
-          command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
-            echo ${URL} 
-            if curl -s ${URL} | grep "Welcome"
-            then
-              return 0
-            else
-              return 1
-            fi
-      - run:
           name: Get backend IP and run backend smoke test
           command: |
             BACKEND_IP=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7})
@@ -359,6 +355,38 @@ jobs:
             else
               return 1
             fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+            echo ${URL} 
+            if curl -s ${URL} | grep "Welcome"
+            then
+              return 0
+            else
+              return 1
+            fi
+      - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert_migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
+  cloudfront-update:
+    executor: aws
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - frontend-build
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            # Change the initial stack name, as applicable to you
+            aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name InitialStack \
+              --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
       - destroy_environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
