@@ -3,9 +3,3 @@
 - Public URL for your CloudFront distribution (aka, your blue production front-end) [URL03]
 - Public URLs to deployed application back-end in EC2 [URL04]
 - Public URL to your Prometheus Server [URL05]
-
-aws cloudformation deploy \
-         --template-file cloudfront.yml \
-         --stack-name InitialStack\
-         --parameter-overrides WorkflowID=udapeople-802961353145 \
-         --profile UdacityLab3
