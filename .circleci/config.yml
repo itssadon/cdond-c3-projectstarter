@@ -387,7 +387,7 @@ jobs:
             - frontend-build
       - run:
           name: Install dependencies
-          command: apk add --update curl nodejs npm
+          command: yum install -y nodejs npm
       - run:
           name: Update cloudfront distribution
           command: |
