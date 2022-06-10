@@ -48,14 +48,19 @@ commands:
           name: Revert migrations
           when: on_fail
           working_directory: ./backend
+          # command: |
+          #   SUCCESS=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/migration_<< parameters.workflow_id >>)
+          #   echo $SUCCESS
+          #   if (( $SUCCESS == 1 ));
+          #   then
+          #     npm install
+          #     npm run migrations:revert
+          #   fi
           command: |
-            SUCCESS=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/migration_<< parameters.workflow_id >>)
-            echo $SUCCESS
-            if (( $SUCCESS == 1 ));
-            then
-              npm install
-              npm run migrations:revert
-            fi
+            npm install
+            npm run migrations:revert
+            npm run migrations:revert
+            npm run migrations:revert
           environment:
             TERM: xterm-256color
 
@@ -368,8 +373,8 @@ jobs:
             else
               return 1
             fi
-      # - destroy_environment:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
