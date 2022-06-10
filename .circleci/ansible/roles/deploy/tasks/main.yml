@@ -12,17 +12,20 @@
     state: directory
 
 - name: Extract the zipped artifact
-  args:
-    chdir: /home/ubuntu/backend_app
   shell: |
     pwd
-    tar xzvf artifact.tar.gz
+    tar xzvf artifact.tar.gz --directory backend_app
     ls -la
+
+- name: Install dependencies
+  args:
+    chdir: /home/ubuntu/backend_app
+  shell: npm install
 
 - name: "delete anything that might already be running"
   become: true
   ignore_errors: true
-  command: pm2 delete all
+  command: pm2 stop default
 
 - name: "start server"
   become: true
