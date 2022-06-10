@@ -387,7 +387,7 @@ jobs:
             - frontend-build
       - run:
           name: Install dependencies
-          command: yum install -y nodejs npm
+          command: dnf module install nodejs:13
       - run:
           name: Update cloudfront distribution
           command: |
