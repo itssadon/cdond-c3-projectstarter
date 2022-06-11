@@ -422,7 +422,7 @@ jobs:
           command: |
             OldWorkflowID=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/WorkflowID)
             echo "OldWorkflowID = ${OldWorkflowID}"
-            
+
             CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
             if [[ "$CurrentWorkflowID" != "${OldWorkflowID}" ]]
             then

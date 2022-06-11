@@ -1,4 +1,7 @@
 ---
+- name: "show remote environment"
+  shell: env
+  
 - name: "update apt packages."
   become: yes
   apt:
