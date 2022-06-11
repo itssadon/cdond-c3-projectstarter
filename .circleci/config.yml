@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node:
     docker:
-      - image: cimg/node:13.8.0
+      - image: cimg/node:14.0.0
   python:
     docker:
       - image: python:3.9.0-alpine
@@ -382,13 +382,10 @@ jobs:
     executor: aws
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - frontend-build
       - run:
           name: Install dependencies
           command: |
-            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
+            curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum install -y nodejs npm
       - run:
           name: Update cloudfront distribution
@@ -411,7 +408,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
+            curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum install -y nodejs npm
       - run:
           name: Get old stack workflow id
@@ -429,12 +426,16 @@ jobs:
       - run:
           name: Remove old stacks and files
           command: |
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
+            if [[ "$CurrentWorkflowID" != "$OldWorkflowID" ]]
             then
               echo "$OldWorkflowID!=$CurrentWorkflowID => will delete old version"
+              
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+            else
+              echo "$OldWorkflowID==$CurrentWorkflowID => nothing needs to be done..."
             fi
 
 workflows:
