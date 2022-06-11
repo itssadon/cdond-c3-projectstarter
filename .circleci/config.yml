@@ -351,10 +351,13 @@ jobs:
           name: Install dependencies
           command: apk add --update curl nodejs npm
       - run:
-          name: Get backend url and run backend smoke test.
+          name: Get backend url
           command: |
             BACKEND_IP=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7})
-            export API_URL="http://${BACKEND_IP}:3030"
+            echo "export API_URL=http://${BACKEND_IP}:3030" >> $BASH_ENV
+      - run:
+          name: Run backend smoke test.
+          command: |
             echo "API_URL=${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
@@ -388,9 +391,16 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum install -y nodejs npm
       - run:
+          name: Store old WorkflowID in kvbd for cleanup phase
+          working_directory: ./.circleci/files
+          command: |
+            WorkflowID=$(aws cloudformation \
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
+            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/WorkflowID -d $WorkflowID
+      - run:
           name: Update cloudfront distribution
           command: |
-            # Change the initial stack name, as applicable to you
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --stack-name InitialStack \
@@ -411,20 +421,15 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum install -y nodejs npm
       - run:
-          name: Get old stack workflow id and Remove old stacks and files
+          name: Get old stack workflow id and
           command: |
             # Fetch the Old workflow ID
-            export OldWorkflowID=$(aws cloudformation \
-                    list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                    --no-paginate --output text)
-            echo OldWorkflowID: "${OldWorkflowID}"
-            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
-            
-            # Fetch the stack names          
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-                    --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}"
-            
+            OldWorkflowID=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/WorkflowID)
+            echo "OldWorkflowID = ${OldWorkflowID}"
+            echo "export OldWorkflowID=${OldWorkflowID}" >> $BASH_ENV
+      - run:
+          name: Remove old stacks and files
+          command: |
             CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
             if [[ "$CurrentWorkflowID" != "${OldWorkflowID}" ]]
             then
