@@ -411,7 +411,7 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum install -y nodejs npm
       - run:
-          name: Get old stack workflow id
+          name: Get old stack workflow id and Remove old stacks and files
           command: |
             # Fetch the Old workflow ID
             export OldWorkflowID=$(aws cloudformation \
@@ -419,17 +419,16 @@ jobs:
                     --no-paginate --output text)
             echo OldWorkflowID: "${OldWorkflowID}"
             echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
+            
             # Fetch the stack names          
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
                     --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             echo Stack names: "${STACKS[@]}"
-      - run:
-          name: Remove old stacks and files
-          command: |
+            
             CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
-            if [[ "$CurrentWorkflowID" != "$OldWorkflowID" ]]
+            if [[ "$CurrentWorkflowID" != "${OldWorkflowID}" ]]
             then
-              echo "$OldWorkflowID!=$CurrentWorkflowID => will delete old version"
+              echo "${OldWorkflowID}!=$CurrentWorkflowID => will delete old version"
 
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
