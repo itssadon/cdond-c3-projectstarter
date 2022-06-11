@@ -420,7 +420,6 @@ jobs:
       - run:
           name: Get old stack workflow id and Remove old stacks/files
           command: |
-            # Fetch the Old workflow ID
             OldWorkflowID=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/WorkflowID)
             echo "OldWorkflowID = ${OldWorkflowID}"
             
