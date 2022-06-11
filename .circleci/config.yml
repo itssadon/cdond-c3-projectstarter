@@ -351,13 +351,10 @@ jobs:
           name: Install dependencies
           command: apk add --update curl nodejs npm
       - run:
-          name: Get backend url
+          name: Get backend url and Run backend smoke test
           command: |
             BACKEND_IP=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7})
-            echo "export API_URL=http://${BACKEND_IP}:3030" >> $BASH_ENV
-      - run:
-          name: Run backend smoke test.
-          command: |
+            API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL=${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
@@ -421,15 +418,12 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum install -y nodejs npm
       - run:
-          name: Get old stack workflow id and
+          name: Get old stack workflow id and Remove old stacks/files
           command: |
             # Fetch the Old workflow ID
             OldWorkflowID=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/WorkflowID)
             echo "OldWorkflowID = ${OldWorkflowID}"
-            echo "export OldWorkflowID=${OldWorkflowID}" >> $BASH_ENV
-      - run:
-          name: Remove old stacks and files
-          command: |
+            
             CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
             if [[ "$CurrentWorkflowID" != "${OldWorkflowID}" ]]
             then
