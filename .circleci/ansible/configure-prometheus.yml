@@ -18,3 +18,4 @@
 
   roles:
     - configure-prometheus
+    - setup-alert-manager
