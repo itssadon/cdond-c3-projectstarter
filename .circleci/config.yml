@@ -397,14 +397,14 @@ jobs:
       - run:
           name: Install tar and gzip
           command: yum install -y tar gzip
-      - run:
-          name: Create prometheus infrastructure
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/prometheus.yml \
-              --stack-name udapeople-prometheus \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
-              --tags project=udapeople-prometheus
+      # - run:
+      #     name: Create prometheus infrastructure
+      #     command: |
+      #       aws cloudformation deploy \
+      #         --template-file .circleci/files/prometheus.yml \
+      #         --stack-name udapeople-prometheus \
+      #         --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --tags project=udapeople-prometheus
       - run:
           name: Save prometheus server IP in kvdb
           command: |
@@ -416,10 +416,7 @@ jobs:
       - run:
           name: Add prometheus server IP to ansible inventory
           command: |
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-prometheus" \
-              --output text >> .circleci/ansible/monitoring-inventory.txt
+            curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip >> .circleci/ansible/monitoring-inventory.txt
       - run:
           name: prepare prometheus configuration
           command: |
