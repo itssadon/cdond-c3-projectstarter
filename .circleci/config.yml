@@ -396,7 +396,7 @@ jobs:
           fingerprints: ["5c:b0:d2:b6:07:d4:0a:9a:d0:d9:4e:9d:e0:5b:3f:82"]
       - run:
           name: Install tar and gzip
-          command: yum install -y tar gzip
+          command: yum install -y tar gzip curl
       # - run:
       #     name: Create prometheus infrastructure
       #     command: |
@@ -412,11 +412,11 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-prometheus" \
               --output text)
-            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip -d ${PROMETHEUS_IP}
+            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip_${CIRCLE_WORKFLOW_ID:0:7} -d ${PROMETHEUS_IP}
       - run:
           name: Add prometheus server IP to ansible inventory
           command: |
-            curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip >> .circleci/ansible/monitoring-inventory.txt
+            curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip_${CIRCLE_WORKFLOW_ID:0:7} >> .circleci/ansible/monitoring-inventory.txt
       - run:
           name: prepare prometheus configuration
           command: |
@@ -442,7 +442,7 @@ jobs:
       # - destroy_prometheus_environment:
       #     workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
 
-  configure-prometheus-infrastructure:
+  configure-prometheus:
     executor: python
     steps:
       - checkout
@@ -580,7 +580,7 @@ workflows:
       - prepare-prometheus-config:
           requires:
             - smoke-test
-      - configure-prometheus-infrastructure:
+      - configure-prometheus:
           requires:
             - prepare-prometheus-config
       - cloudfront-update:

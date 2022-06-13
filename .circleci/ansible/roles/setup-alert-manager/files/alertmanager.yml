@@ -10,12 +10,12 @@ receivers:
       - url: "http://127.0.0.1:5001/"
   - name: email-me
     email_configs:
-      - to: EMAIL_YOU_WANT_TO_SEND_EMAILS_TO
-        from: YOUR_EMAIL_ADDRESS
+      - to: abubakarhassan59+prometheus@gmail.com
+        from: abubakarhassan59@gmail.com
         smarthost: smtp.gmail.com:587
-        auth_username: YOUR_EMAIL_ADDRESS
-        auth_identity: YOUR_EMAIL_ADDRESS
-        auth_password: YOUR_EMAIL_PASSWORD
+        auth_username: abubakarhassan59@gmail.com
+        auth_identity: abubakarhassan59@gmail.com
+        auth_password: davfnwyegkiehnxn
 inhibit_rules:
   - source_match:
       severity: "critical"
