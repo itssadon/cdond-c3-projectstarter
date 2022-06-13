@@ -63,6 +63,19 @@ commands:
           environment:
             TERM: xterm-256color
 
+  destroy_prometheus_environment:
+    description: Destroy prometheus cloudformation stack given a workflow ID.
+    parameters:
+      workflow_id:
+        type: string
+    steps:
+      - run:
+          name: Destroy environment
+          when: on_fail
+          command: aws cloudformation delete-stack --stack-name udapeople-prometheus-<< parameters.workflow_id >>
+          environment:
+            TERM: xterm-256color
+
 jobs:
   install-frontend-dependencies:
     executor: node
@@ -192,14 +205,6 @@ jobs:
               --output text)
             curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7} -d ${BACKEND_IP}
       - run:
-          name: Save prometheus server IP in kvdb
-          command: |
-            PROMETHEUS_IP=$(aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-prometheus" \
-              --output text)
-            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip -d ${PROMETHEUS_IP}
-      - run:
           name: Add back-end ip to ansible inventory
           command: |
             aws ec2 describe-instances \
@@ -219,6 +224,61 @@ jobs:
           paths:
             - .circleci/ansible/inventory.txt
       - destroy_environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+
+  deploy-prometheus-infrastructure:
+    executor: aws
+    steps:
+      - checkout
+      - run:
+          name: Install tar and gzip
+          command: yum install -y tar gzip
+      - run:
+          name: Create prometheus infrastructure
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/prometheus.yml \
+              --stack-name udapeople-prometheus-${CIRCLE_WORKFLOW_ID:0:5} \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople-prometheus-${CIRCLE_WORKFLOW_ID:0:7}
+      - run:
+          name: Save prometheus server IP in kvdb
+          command: |
+            PROMETHEUS_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople-prometheus-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip_${CIRCLE_WORKFLOW_ID:0:7} -d ${PROMETHEUS_IP}
+      - run:
+          name: Add prometheus server IP to ansible inventory
+          command: |
+            aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople-prometheus-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text >> .circleci/ansible/monitoring-inventory.txt
+      - run:
+          name: prepare prometheus configuration
+          command: |
+            echo \
+            "global:
+              scrape_interval: 1s
+              evaluation_interval: 1s
+              external_labels:
+                monitor: "prometheus"
+
+            scrape_configs:
+              - job_name: "node"
+                ec2_sd_configs:
+                  - region: us-east-1
+                    access_key: ${AWS_ACCESS_KEY_ID}
+                    secret_key: ${AWS_SECRET_ACCESS_KEY}
+                    port: 9100" > .circleci/ansible/roles/configure-prometheus/files/prometheus.yml
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .circleci/ansible/monitoring-inventory.txt
+            - .circleci/ansible/roles/configure-prometheus/files/prometheus.yml
+      - destroy_prometheus_environment:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
 
   configure-infrastructure:
@@ -247,7 +307,36 @@ jobs:
             ansible-playbook -i inventory.txt configure-server.yml
       - destroy_environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-      
+
+  configure-prometheus-infrastructure:
+    executor: python
+    steps:
+      - checkout
+      - run:
+          name: Install tar utility
+          command: apk add --no-cache tar gzip
+      - aws-cli/setup:
+          profile-name: default
+      - attach_workspace:
+          at: .
+      - add_ssh_keys:
+          fingerprints: ["5c:b0:d2:b6:07:d4:0a:9a:d0:d9:4e:9d:e0:5b:3f:82"]
+      - run:
+          name: Install Ansible
+          command: |
+            apk add --update ansible
+            ansible --version
+      - run:
+          name: Configure prometheus server
+          working_directory: ./.circleci/ansible
+          command: |
+            pwd &&
+            ls -la
+            cat monitoring-inventory.txt
+            ansible-playbook -i monitoring-inventory.txt configure-prometheus.yml
+      - destroy_prometheus_environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+
   run-migrations:
     executor: node
     steps:
@@ -383,56 +472,6 @@ jobs:
       - revert_migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
-  configure-prometheus-infrastructure:
-    executor: python
-    steps:
-      - checkout
-      - aws-cli/setup:
-          profile-name: default
-      - run:
-          name: Install tar utility
-          command: |
-            apk add --no-cache tar gzip
-            apk add --update ansible
-            ansible --version
-      - add_ssh_keys:
-          fingerprints: ["5c:b0:d2:b6:07:d4:0a:9a:d0:d9:4e:9d:e0:5b:3f:82"]
-       - run:
-          name: Add prometheus server IP to ansible inventory
-          command: |
-            PROMETHEUS_IP=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip)
-            echo ${PROMETHEUS_IP} >> .circleci/ansible/monitoring-inventory.txt
-      - run:
-          name: prepare prometheus configuration
-          command: |
-            echo \
-            "global:
-              scrape_interval: 1s
-              evaluation_interval: 1s
-              external_labels:
-                monitor: "prometheus"
-
-            scrape_configs:
-              - job_name: "node"
-                ec2_sd_configs:
-                  - region: us-east-1
-                    access_key: ${AWS_ACCESS_KEY_ID}
-                    secret_key: ${AWS_SECRET_ACCESS_KEY}
-                    port: 9100" > .circleci/ansible/roles/configure-prometheus/files/prometheus.yml
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .circleci/ansible/monitoring-inventory.txt
-            - .circleci/ansible/roles/configure-prometheus/files/prometheus.yml
-      - run:
-          name: Configure prometheus server
-          working_directory: ./.circleci/ansible
-          command: |
-            pwd &&
-            ls -la
-            cat monitoring-inventory.txt
-            ansible-playbook -i monitoring-inventory.txt configure-prometheus.yml
-
   cloudfront-update:
     executor: aws
     steps:
@@ -539,9 +578,12 @@ workflows:
           requires:
             - deploy-backend
             - deploy-frontend
-      - configure-prometheus-infrastructure:
+      - deploy-prometheus-infrastructure:
           requires:
             - smoke-test
+      - configure-prometheus-infrastructure:
+          requires:
+            - deploy-prometheus-infrastructure
       - cloudfront-update:
           requires:
             - smoke-test
