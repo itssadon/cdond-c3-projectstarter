@@ -410,15 +410,15 @@ jobs:
           command: |
             PROMETHEUS_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-prometheus-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --filters "Name=tag:project,Values=udapeople-prometheus" \
               --output text)
-            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip_${CIRCLE_WORKFLOW_ID:0:7} -d ${PROMETHEUS_IP}
+            curl https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/prometheus_ip -d ${PROMETHEUS_IP}
       - run:
           name: Add prometheus server IP to ansible inventory
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-prometheus-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --filters "Name=tag:project,Values=udapeople-prometheus" \
               --output text >> .circleci/ansible/monitoring-inventory.txt
       - run:
           name: prepare prometheus configuration
