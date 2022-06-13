@@ -231,6 +231,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install tar and gzip
+          command: yum install -y tar gzip
+      - run:
           name: Create prometheus infrastructure
           command: |
             aws cloudformation deploy \
@@ -562,13 +565,6 @@ workflows:
       - configure-infrastructure:
           requires:
             - deploy-infrastructure
-      - deploy-prometheus-infrastructure:
-          requires:
-            - deploy-infrastructure
-      - configure-prometheus-infrastructure:
-          requires:
-            - configure-infrastructure
-            - deploy-prometheus-infrastructure
       - run-migrations:
           requires:
             - configure-infrastructure
@@ -582,6 +578,12 @@ workflows:
           requires:
             - deploy-backend
             - deploy-frontend
+      - deploy-prometheus-infrastructure:
+          requires:
+            - smoke-test
+      - configure-prometheus-infrastructure:
+          requires:
+            - deploy-prometheus-infrastructure
       - cloudfront-update:
           requires:
             - smoke-test
