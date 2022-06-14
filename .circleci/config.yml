@@ -577,12 +577,12 @@ workflows:
           requires:
             - deploy-backend
             - deploy-frontend
-      - prepare-prometheus-config:
-          requires:
-            - smoke-test
-      - configure-prometheus:
-          requires:
-            - prepare-prometheus-config
+      # - prepare-prometheus-config:
+      #     requires:
+      #       - smoke-test
+      # - configure-prometheus:
+      #     requires:
+      #       - prepare-prometheus-config
       - cloudfront-update:
           requires:
             - smoke-test
