@@ -14,9 +14,18 @@ alerting:
             - localhost:9093
 
 scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
   - job_name: "node"
     ec2_sd_configs:
       - region: us-east-1
-        access_key: PUT_THE_ACCESS_KEY_HERE
-        secret_key: PUT_THE_SECRET_KEY_HERE
+        access_key: AKIA3V5BZ5G4U2M3HSVF
+        secret_key: "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"
         port: 9100
+        filters:
+          - name: Name
+            value: backend-*
+  - job_name: "node_exporter"
+    static_configs:
+      - targets: ["ec2-3-84-112-117.compute-1.amazonaws.com:9100"]
