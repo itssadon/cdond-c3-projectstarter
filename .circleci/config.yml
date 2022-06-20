@@ -366,7 +366,6 @@ jobs:
             BACKEND_IP=$(curl --insecure https://kvdb.io/9BE2wMaNxe2wCecHbxFUuY/backend_ip_${CIRCLE_WORKFLOW_ID:0:7})
             API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL=${API_URL}"
-            return 1
             if curl "${API_URL}/api/status" | grep "ok"
             then
               return 0
